@@ -441,6 +441,10 @@ public class BodyTranslator extends Translator {
          *
          *   CallRubiniusPrimitiveNode(FooNode(arg1, arg2, ..., argN))
          *
+         * or
+         *
+         *   ModuleDefinedIn.foo arg1, arg2, ..., argN
+         *
          * Where the arguments are the same arguments as the method. It looks like this is only exercised with simple
          * arguments so we're not worrying too much about what happens when they're more complicated (rest,
          * keywords etc).
@@ -514,6 +518,10 @@ public class BodyTranslator extends Translator {
          * into
          *
          *   InvokeRubiniusPrimitiveNode(FooNode(arg1, arg2, ..., argN))
+         *
+         * or
+         *
+         *   ModuleDefinedIn.foo arg1, arg2, ..., argN
          */
 
         if (node.getArgsNode().childNodes().size() < 1 || !(node.getArgsNode().childNodes().get(0) instanceof org.jruby.ast.SymbolNode)) {
