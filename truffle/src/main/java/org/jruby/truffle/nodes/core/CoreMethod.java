@@ -27,7 +27,7 @@ public @interface CoreMethod {
 
     /**
      * Defines the method on the singleton class.
-     * {@link needsSelf} is always false.
+     * {@link #needsSelf} is always false.
      * */
     boolean onSingleton() default false;
 
@@ -39,7 +39,7 @@ public @interface CoreMethod {
     /**
      * Defines the method as public on the singleton class
      * and as a private instance method.
-     * {@link needsSelf} is always false.
+     * {@link #needsSelf} is always false.
      */
     boolean isModuleFunction() default false;
 
