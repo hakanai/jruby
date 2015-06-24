@@ -1,6 +1,8 @@
 package org.jruby.java.dispatch;
 
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import org.jruby.RubyBoolean;
 import org.jruby.RubyFixnum;
 import org.jruby.RubyFloat;
 import org.jruby.RubyInteger;
+import org.jruby.RubyProc;
 import org.jruby.RubyString;
 import org.jruby.javasupport.JavaCallable;
 import org.jruby.javasupport.JavaClass;
@@ -360,6 +363,13 @@ public class CallableSelector {
         @Override public String toString() { return "PRIMITIVABLE"; } // for debugging
     };
 
+    private static final Matcher FUNCTIONAL_DUCKABLE = new Matcher() {
+        public boolean match(Class type, IRubyObject arg) {
+            return isFunctionalInterface(type) && arg instanceof RubyProc;
+        }
+        @Override public String toString() { return "FUNCTIONAL_DUCKABLE"; } // for debugging
+    };
+
     private static final Matcher DUCKABLE = new Matcher() {
         public boolean match(Class type, IRubyObject arg) {
             return duckable(type, arg);
@@ -368,7 +378,7 @@ public class CallableSelector {
     };
 
     //private static final Matcher[] MATCH_SEQUENCE = new Matcher[] { EXACT, PRIMITIVABLE, ASSIGNABLE, DUCKABLE };
-    private static final Matcher[] NON_EXACT_MATCH_SEQUENCE = new Matcher[] { PRIMITIVABLE, ASSIGNABLE, DUCKABLE };
+    private static final Matcher[] NON_EXACT_MATCH_SEQUENCE = new Matcher[] { PRIMITIVABLE, ASSIGNABLE, FUNCTIONAL_DUCKABLE, DUCKABLE };
 
     private static boolean exactMatch(ParameterTypes paramTypes, IRubyObject... args) {
         Class[] types = paramTypes.getParameterTypes();
@@ -595,4 +605,41 @@ public class CallableSelector {
         return new IntHashMap<T>(8);
     }
 
+    /**
+     * Tries to match Java 8 semantics of functional interfaces because there doesn't appear
+     * to be a way to check - even in Java 8.
+     *
+     * @param iface the interface (or possibly a class, we'll have to check it.)
+     * @return {@code true} if it is a functional interface, {@code false} otherwise.
+     */
+    private static boolean isFunctionalInterface(Class<?> iface) {
+        if ( !iface.isInterface() ) return false;
+
+        //Java 8 could use this shortcut but note that even if it doesn't have this annotation,
+        // it could still be a functional interface.
+//        if (iface.getAnnotation(java.lang.FunctionalInterface.class) != null) {
+//            return true;
+//        }
+
+        int abstractMethodCount = 0;
+        for ( Method method : iface.getMethods() ) {
+            // "If an interface declares an abstract method overriding one of the
+            //  public methods of java.lang.Object, that also does _not_ count
+            //  toward the interface's abstract method count."
+            try {
+                Object.class.getMethod(method.getName(), method.getParameterTypes());
+                continue;
+            } catch (NoSuchMethodException e) {
+                // Cool.
+            }
+
+            int modifiers = method.getModifiers();
+            //Java 8 could use !Method.isDefault()
+            if ( (modifiers & (Modifier.STATIC | Modifier.ABSTRACT)) == Modifier.ABSTRACT ) {
+                abstractMethodCount++;
+            }
+        }
+
+        return abstractMethodCount == 1;
+    }
 }
