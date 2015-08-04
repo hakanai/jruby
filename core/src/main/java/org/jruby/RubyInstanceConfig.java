@@ -671,10 +671,14 @@ public class RubyInstanceConfig {
     }
 
     private void setupEnvironment(String jrubyHome) {
-        if (!new File(jrubyHome).exists() && !environment.containsKey("RUBY")) {
-            // the assumption that if JRubyHome is not a regular file that jruby
-            // got launched in an embedded fashion
-            environment.put("RUBY", ClasspathLauncher.jrubyCommand(defaultClassLoader()) );
+        try {
+            if (!new File(jrubyHome).exists() && !environment.containsKey("RUBY")) {
+                // the assumption that if JRubyHome is not a regular file that jruby
+                // got launched in an embedded fashion
+                environment.put("RUBY", ClasspathLauncher.jrubyCommand(defaultClassLoader()) );
+            }
+        } catch (SecurityException e) {
+            // Workaround for https://github.com/jruby/jruby/issues/1220
         }
     }
 
