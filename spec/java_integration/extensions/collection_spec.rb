@@ -139,6 +139,14 @@ describe "Collection Ruby extensions" do
     expect( arr.dup ).to be_a java.util.concurrent.LinkedBlockingQueue
     expect( arr.dup.poll ).to eq 42
     expect( arr.to_a ).to eql [42]
+
+    # immutable and Cloneable
+    arr = java_integration.fixtures.CloneableImmutableList.new
+    expect( arr.dup ).to equal arr
+
+    # immutable and non-Cloneable
+    arr = java_integration.fixtures.NonCloneableImmutableList.new
+    expect( arr.dup ).to equal arr
   end
 
   it 'clones' do
@@ -157,6 +165,14 @@ describe "Collection Ruby extensions" do
     expect( set.clone ).to be_a java.util.concurrent.CopyOnWriteArraySet
     set.clone.add '1'
     expect( set.to_a ).to eql ['0']
+
+    # immutable and Cloneable
+    arr = java_integration.fixtures.CloneableImmutableList.new
+    expect( arr.clone ).to equal arr
+
+    # immutable and non-Cloneable
+    arr = java_integration.fixtures.NonCloneableImmutableList.new
+    expect( arr.clone ).to equal arr
   end
 
   it '#include?' do
